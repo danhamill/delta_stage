@@ -91,29 +91,44 @@ def app():
                         #assign a color marker for the type of volcano, Strato being the most common
                         print(tmp_gdf.iloc[i].Station.upper())
                         if tmp_gdf.iloc[i].Station.upper() == random_site:
-                            type_color = "#ef8a62"
+                            type_color = "#1a1a1a"
                             print('found true')
-                            phat = 1
-                        else:
-                            type_color = "#67a9cf"
+                            phat = 0.5
+                            marker = f"""
+                                        <div><svg>
+                                            <circle cx="0" cy="0" r="{100*phat}" fill="{type_color}" opacity=".8"/>
+                                        </svg></div>
+                                        """
+                        elif tmp_gdf.iloc[i].p_hat == tmp_gdf.p_hat.max():
+                            type_color = '#e41a1c'
                             phat = tmp_gdf.iloc[i].p_hat
+                            marker = f"""
+                                        <div><svg>
+                                            <circle cx="0" cy="0" r="{100*phat}" fill="{type_color}" opacity=".8"/>
+                                        </svg></div>
+                                        """
+                        
+                        else:
+                            type_color = "#4daf4a"
+                            phat = tmp_gdf.iloc[i].p_hat
+                            marker = f"""
+                                        <div><svg>
+                                            <circle cx="0" cy="0" r="{100*phat}" fill="{type_color}" opacity=".8"/>
+                                        </svg></div>
+                                        """
+
 
                             # Place the markers with the popup labels and data
                         map.add_child(folium.Marker(location = coordinates,
                                                 popup =
                                                 "P_hat: " + str(phat)+ '<br>'+
                                                 "Name: " + str(tmp_gdf.iloc[i].Station),
-                                                # radius = tmp_gdf.iloc[i].p_hat
-                                                icon = folium.DivIcon(f"""
-                                                                            <div><svg>
-                                                                                <circle cx="50" cy="50" r="{20*phat}" fill="{type_color}" opacity=".8"/>
-                                                                            </svg></div>
-                                                                            """)))
-                                                #icon = folium.Icon(color = "%s" % type_color)))
+                                                icon = folium.DivIcon(marker)))
+
                         i += 1
                         del type_color
             folium_static(map, width = width-100, height = height)
-
+            
             row1_col1.dataframe(pd.DataFrame(tmp_gdf.drop(['Latitude_D','Longitude_D','geometry','mycolor'], axis=1)).dropna().sort_values('p_hat', ascending = False))
 
             line = alt.Chart(sub_df).mark_line().encode(

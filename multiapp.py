@@ -50,7 +50,7 @@ class MultiApp:
 
         titles = [a["title"] for a in self.apps]
         functions = [a["function"] for a in self.apps]
-        default_radio = titles.index(app_state["page"]) if "page" in app_state else 0
+        default_radio = titles.index(app_state["page"]) if "page" in ['Visualize Vector Data'] else 0
 
         st.sidebar.title("Navigation")
 

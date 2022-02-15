@@ -10,7 +10,7 @@ st.set_page_config(layout="wide")
 
 apps = MultiApp()
 
-apps.add_app("Delta Stage Record Extenstion", vector.app)
+apps.add_app("Visualize Vector Data", vector.app)
 
 
 # The main app

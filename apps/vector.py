@@ -10,14 +10,14 @@ import altair as alt
 
 def load_station_shapefile():
 
-    geo_file = 'https://github.com/danhamill/delta_stage/blob/2e3afb1a857e772b0509ae072ff33ed071b136ce/data/gage_list_lat-lon.csv'
+    geo_file = 'https://raw.githubusercontent.com/danhamill/delta_stage/main/data/gage_list_lat-lon.csv'
     df_stns = pd.read_csv(geo_file)
     gdf = gpd.GeoDataFrame(df_stns, geometry=gpd.points_from_xy(df_stns.Longitude_D, df_stns.Latitude_D),crs='EPSG:4326')
     gdf.Station = gdf.Station.str.upper()
     return gdf
 
 def load_results():
-    data_file = 'https://github.com/danhamill/delta_stage/blob/2e3afb1a857e772b0509ae072ff33ed071b136ce/data/temp_results.csv'
+    data_file = 'https://raw.githubusercontent.com/danhamill/delta_stage/main/data/temp_results.csv'
     df = pd.read_csv(data_file)
     df = df.drop('Unnamed: 0', axis=1)
     return df

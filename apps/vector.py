@@ -48,7 +48,7 @@ def get_short_site_data(df, gdf, random_site):
     tmp_gdf = tmp_gdf.loc[tmp_gdf.Station.isin([random_site.upper()]+sub_df.long_name.unique().tolist())]
     tmp_gdf.loc[tmp_gdf.Station == random_site.upper(), 'mycolor'] = 'red'
     tmp_gdf.loc[tmp_gdf.Station != random_site.upper(), 'mycolor'] = 'blue'
-    tmp_gdf = tmp_gdf.reset_index()
+    tmp_gdf = tmp_gdf.reset_index(drop=True)
     return sub_df, tmp_gdf
 
 def app():

@@ -97,7 +97,7 @@ def app():
                                                 # radius = tmp_gdf.iloc[i].p_hat
                                                 icon = folium.Icon(color = "%s" % type_color)))
                         i += 1
-            folium_static(map, width = width, height = height)
+            folium_static(map, width = width-100, height = height)
 
             row1_col1.dataframe(pd.DataFrame(tmp_gdf.drop(['Latitude_D','Longitude_D','geometry','mycolor'], axis=1).dropna()).sort_values('p_hat', ascending = False))
 

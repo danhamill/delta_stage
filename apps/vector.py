@@ -20,6 +20,8 @@ def load_results():
     data_file = 'https://raw.githubusercontent.com/danhamill/delta_stage/main/data/temp_results.csv'
     df = pd.read_csv(data_file)
     df = df.drop('Unnamed: 0', axis=1)
+    df.short_name = df.short_name.str.upper()
+    df.long_name = df.long_name.str.upper()
     return df
 
 
@@ -39,7 +41,15 @@ def save_uploaded_file(file_content, file_name):
         file.write(file_content.getbuffer())
 
     return file_path
-
+def get_short_site_data(df, gdf, random_site):
+    sub_df = df.loc[df.short_name == random_site, :]
+    tmp_gdf  = gdf.merge(sub_df, left_on = 'Station', right_on= 'long_name', how='left' )
+    tmp_gdf = tmp_gdf[['Station', 'Latitude_D', 'Longitude_D', 'geometry',  'p_hat', 'record_length', 'distance_miles']].drop_duplicates()
+    tmp_gdf = tmp_gdf.loc[tmp_gdf.Station.isin([random_site.upper()]+sub_df.long_name.unique().tolist())]
+    tmp_gdf.loc[tmp_gdf.Station == random_site.upper(), 'mycolor'] = 'red'
+    tmp_gdf.loc[tmp_gdf.Station != random_site.upper(), 'mycolor'] = 'blue'
+    tmp_gdf = tmp_gdf.reset_index()
+    return sub_df, tmp_gdf
 
 def app():
 
@@ -53,7 +63,7 @@ def app():
 
         gdf = load_station_shapefile()
         df = load_results()
-        df.short_name = df.short_name.str.upper()
+
         lon, lat = leafmap.gdf_centroid(gdf)
 
         container = st.container()
@@ -71,35 +81,40 @@ def app():
                     random_site = st.selectbox(
                         "Select a site to plot", short_names
                     )
-
+                    print(random_site)
                     #subset results
-                    sub_df = df.loc[df.short_name == random_site, :]
-                    tmp_gdf  = gdf.merge(sub_df, left_on = 'Station', right_on= 'long_name', how='left' )
-                    tmp_gdf = tmp_gdf[['Station', 'Latitude_D', 'Longitude_D', 'geometry',  'p_hat', 'record_length', 'distance_miles']].drop_duplicates()
-                    tmp_gdf = tmp_gdf.loc[tmp_gdf.Station.isin([random_site.upper()]+sub_df.long_name.unique().tolist())]
-                    tmp_gdf.loc[tmp_gdf.Station == random_site.upper(), 'mycolor'] = 'red'
-                    tmp_gdf.loc[tmp_gdf.Station != random_site.upper(), 'mycolor'] = 'blue'
+                    sub_df, tmp_gdf = get_short_site_data(df, gdf, random_site)
 
                     geo_df_list = [[point.xy[1][0], point.xy[0][0]] for point in tmp_gdf.geometry ]
                     i = 0
                     for coordinates in geo_df_list:
                         #assign a color marker for the type of volcano, Strato being the most common
+                        print(tmp_gdf.iloc[i].Station.upper())
                         if tmp_gdf.iloc[i].Station.upper() == random_site:
-                            type_color = "green"
+                            type_color = "#ef8a62"
+                            print('found true')
+                            phat = 1
                         else:
-                            type_color = "blue"
+                            type_color = "#67a9cf"
+                            phat = tmp_gdf.iloc[i].p_hat
 
                             # Place the markers with the popup labels and data
                         map.add_child(folium.Marker(location = coordinates,
                                                 popup =
-                                                "P_hat: " + str(tmp_gdf.iloc[i].p_hat)+ '<br>'+
+                                                "P_hat: " + str(phat)+ '<br>'+
                                                 "Name: " + str(tmp_gdf.iloc[i].Station),
                                                 # radius = tmp_gdf.iloc[i].p_hat
-                                                icon = folium.Icon(color = "%s" % type_color)))
+                                                icon = folium.DivIcon(f"""
+                                                                            <div><svg>
+                                                                                <circle cx="50" cy="50" r="{20*phat}" fill="{type_color}" opacity=".8"/>
+                                                                            </svg></div>
+                                                                            """)))
+                                                #icon = folium.Icon(color = "%s" % type_color)))
                         i += 1
+                        del type_color
             folium_static(map, width = width-100, height = height)
 
-            row1_col1.dataframe(pd.DataFrame(tmp_gdf.drop(['Latitude_D','Longitude_D','geometry','mycolor'], axis=1).dropna()).sort_values('p_hat', ascending = False))
+            row1_col1.dataframe(pd.DataFrame(tmp_gdf.drop(['Latitude_D','Longitude_D','geometry','mycolor'], axis=1)).dropna().sort_values('p_hat', ascending = False))
 
             line = alt.Chart(sub_df).mark_line().encode(
                 x = alt.X('WY:O', axis = alt.Axis(title = 'Water Year')),
